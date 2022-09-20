@@ -1,0 +1,68 @@
+GPUID: 1
+WORKERS: 40
+PRINT_FREQ: 10
+SAVE_FREQ: 10
+PIN_MEMORY: False
+OUTPUT_DIR: 'output'
+
+CUDNN:
+  BENCHMARK: True
+  DETERMINISTIC: False
+  ENABLED: True
+
+DATASET:
+  DATASET: Hw_Ch&En # Ch&En 
+  ROOT: ""
+  JSON_FILE: {
+    'train': '/home/wex37/FedOCR/data/hw_train.json',
+    'val': '/home/wex37/FedOCR/data/hw_test.json'
+  } 
+  
+  SCALE_FACTOR: 0.25
+  ROT_FACTOR: 30
+  STD: 0.193
+  MEAN: 0.588
+  ALPHABETS: ''
+
+TRAIN:
+  BATCH_SIZE_PER_GPU: 100
+  SHUFFLE: True
+  BEGIN_EPOCH: 0
+  END_EPOCH: 8
+  RESUME:
+    IS_RESUME: False
+    FILE: '/mnt/Data02/junxi/CRNN_Chinese_Characters_Rec/output/Hw_Ch&En/hw_512_full_data/2022-08-02-00-23/checkpoints/checkpoint_36_acc_0.7442.pth'
+  OPTIMIZER: 'adam' # 'adam' 用于各项参数都收敛了以后可以继续优化一下 
+  LR: 0.00004 #1 : 0.0002 *** 2: 0.00008 训练后期调小 为了能够让步子小一点不会扯着蛋
+  WD: 0.0
+  LR_STEP: [5, 10, 15, 20, 25] # [10, 20, 30, 40, 50] , [5, 10, 15, 20, 25]
+  LR_FACTOR: 0.5
+  MOMENTUM: 0.0
+  NESTEROV: False
+  RMSPROP_ALPHA:
+  RMSPROP_CENTERED:
+  FINETUNE:
+    IS_FINETUNE: False
+    FINETUNE_CHECKPOINIT: '/mnt/Data02/junxi/CRNN_Chinese_Characters_Rec/output/Ch&En/crnn/2022-02-17-00-13/checkpoints/checkpoint_31_acc_0.9377.pth'
+    FREEZE: False
+
+TEST:
+  BATCH_SIZE_PER_GPU: 100
+  SHUFFLE: True  # for random test rather than test on the whole validation set
+  NUM_TEST_BATCH: 1000
+  NUM_TEST_DISP: 10
+
+MODEL:
+  NAME: 'hw_512_full_data'
+  IMAGE_SIZE:
+    OW: 320 # origial width: 280
+    H: 32
+    W: 512 # resized width: 160
+  NUM_CLASSES: 0
+  NUM_HIDDEN: 256
+
+FED:
+  NUM_USERS: 10
+  FRAC: 1
+  LOCAL_EPOCH: 2
+  SHARE_RATE: 0.1
