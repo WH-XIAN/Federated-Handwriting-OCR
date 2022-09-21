@@ -1,5 +1,5 @@
 # Federated-Handwriting-OCR
-This repository provides the code to implement handwriting OCR by federated learning
+This repository provides the code to implement handwriting OCR by federated learning.
 
 ## Running Environment
 ```
