@@ -1,7 +1,7 @@
 # Federated-Handwriting-OCR
 This repository provides the code to implement handwriting OCR by federated learning.
 
-## Running Environment
+## Environment
 ```
     pip3 install -r requirement.txt
 ```
