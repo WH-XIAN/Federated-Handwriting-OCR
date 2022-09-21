@@ -1,21 +1,21 @@
-## Federated-Handwriting-OCR
+# Federated-Handwriting-OCR
 This repository provides the code to implement handwriting OCR by federated learning
 
-# Running Environment
+## Running Environment
 ```
     pip3 install -r requirement.txt
 ```
 
-# Training
+## Training
 ```
     CUDA_VISIBLE_DEVICES=0 python3 train_8langs_fed.py 
 ```
 
-# Dataset
+## Dataset
 CASIA (Chinese), Handwriting (English), IAM (English), SCUT-EPT (Chinese), SCUT-HCCDoc (Chinese)
 training data: 662696, testing data: 85303, dictionary: 6636
 
-# Parameters
+## Parameters
 Parameters are set in lib/config/hw_512_config.yaml
 For federated learning:
 * FED.NUM_USERS      the total number of users
