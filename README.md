@@ -12,11 +12,11 @@ This repository provides the code to implement handwriting OCR by federated lear
 ```
 
 ## Dataset
-CASIA (Chinese), Handwriting (English), IAM (English), SCUT-EPT (Chinese), SCUT-HCCDoc (Chinese)
+CASIA (Chinese), Handwriting (English), IAM (English), SCUT-EPT (Chinese), SCUT-HCCDoc (Chinese)  
 training data: 662696, testing data: 85303, dictionary: 6636
 
 ## Parameters
-Parameters are set in lib/config/hw_512_config.yaml
+Parameters are set in lib/config/hw_512_config.yaml  
 For federated learning:
 * FED.NUM_USERS      the total number of users
 * FED.FRAC           the fraction of active users in each communication round
