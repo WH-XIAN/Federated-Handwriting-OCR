@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import argparse
 from easydict import EasyDict as edict
 import yaml
@@ -12,6 +13,7 @@ from torch.multiprocessing import Process
 import torch.backends.cudnn as cudnn
 from torch.utils.data import DataLoader, random_split, ConcatDataset
 
+import keys as alphabet
 import lib.model.hw_mobile_net as hw_rec
 import lib.model.crnn as crnn
 import lib.config.utils.utils as utils
@@ -19,7 +21,6 @@ from lib.dataset import get_dataset
 from lib.core import hw_function as function
 import lib.config.alphabets_new as alphabets_raw #  alphabet_8langs
 from lib.config.utils.utils import model_info
-import keys as alphabet
 
 from tensorboardX import SummaryWriter
 import pdb
@@ -32,8 +33,8 @@ def parse_arg():
     args = parser.parse_args()
 
     with open(args.cfg, 'r') as f:
-        # config = yaml.load(f, Loader=yaml.FullLoader)
-        config = yaml.load(f)
+        config = yaml.load(f, Loader=yaml.FullLoader)
+        # config = yaml.load(f)
         config = edict(config)
     # 给alphabet 赋值 用最新的 八种语言的 dict
     config.DATASET.ALPHABETS = alphabets_raw.alphabet_cn
