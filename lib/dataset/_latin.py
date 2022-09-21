@@ -2,6 +2,7 @@ from __future__ import print_function, absolute_import
 import torch.utils.data as data
 import os
 import numpy as np
+import random
 import cv2
 import json
 from PIL import Image
@@ -134,12 +135,23 @@ class _Latin(data.Dataset):
 
     def __len__(self):
         return len(self.labels)
+
+    def _next_image(self):
+        next_index = random.randint(0, len(self) - 1)
+        return self.get(next_index)
+
+    def get(self, idx):
+        img_name = list(self.labels[idx].keys())[0]
+        label = list(self.labels[idx].values())[0]
+        try:
+            img1 = Image.open(img_name).convert('L')
+            return img1, label, idx
+        except:
+            return self._next_image()
     
     def __getitem__(self, idx):
 
-        img_name = list(self.labels[idx].keys())[0]
-        label = list(self.labels[idx].values())[0]
-        img1 = Image.open(img_name).convert('L')
+        img1, label, new_idx = self.get(idx)
         width, height = img1.size[0], img1.size[1]
         if height > 1.5*width:
             img1 = np.array(img1)
@@ -149,7 +161,7 @@ class _Latin(data.Dataset):
         # img1 = img_preprocessing(img1)
         processed_image = fixed_img_preprocessing(img1, self.inp_h, self.inp_w, self.mean, self.std)
         
-        return processed_image, label, idx
+        return processed_image, label, new_idx
 
 
 if __name__ == '__main__':
