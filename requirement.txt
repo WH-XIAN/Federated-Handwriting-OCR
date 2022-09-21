@@ -1,0 +1,8 @@
+torch
+pyyaml
+easydict
+thop
+tensorboardX
+opencv-python
+Pillow
+pdbpp
