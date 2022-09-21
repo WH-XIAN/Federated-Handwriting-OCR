@@ -16,7 +16,7 @@ CASIA (Chinese), Handwriting (English), IAM (English), SCUT-EPT (Chinese), SCUT-
 training data: 662696, testing data: 85303, dictionary: 6636
 
 ## Parameters
-Parameters are set in *lib/config/hw_512_config.yaml*  
+Parameters are defined in *lib/config/hw_512_config.yaml*  
 For federated learning:
 <pre>
 * FED.NUM_USERS      the total number of users
