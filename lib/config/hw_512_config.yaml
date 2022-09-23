@@ -66,3 +66,5 @@ FED:
   FRAC: 1
   LOCAL_EPOCH: 2
   SHARE_RATE: 0.1
+  STARTUP_EPOCH: 5
+  NORM: 'BatchNorm'

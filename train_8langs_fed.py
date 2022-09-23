@@ -65,6 +65,35 @@ def sample_split(l, sl, num):
     return res
 
 
+def pretrain(config, train_loader, converter, model, criterion, device, logger):
+    optimizer = utils.get_optimizer(config, model)
+    if isinstance(config.TRAIN.LR_STEP, list):
+        lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
+            optimizer, config.TRAIN.LR_STEP,
+            config.TRAIN.LR_FACTOR, config.TRAIN.BEGIN_EPOCH - 1
+        )
+    else:
+        lr_scheduler = torch.optim.lr_scheduler.StepLR(
+            optimizer, config.TRAIN.LR_STEP,
+            config.TRAIN.LR_FACTOR, config.TRAIN.BEGIN_EPOCH - 1
+        )
+    for startup_epoch in range(config.FED.STARTUP_EPOCH):
+        msg = 'Pretrain on shared data, epoch {0}'.format(startup_epoch)
+        logger.info(msg)
+        for i, (inp, labels, idx) in enumerate(train_loader):
+            inp = inp.to(device)
+            preds = model(inp).cpu()
+            batch_size = inp.size(0)
+            text, length = converter.encode(labels)
+            preds_size = torch.IntTensor([preds.size(0)] * batch_size) # timestep * batchsize
+            loss = criterion(preds, text, preds_size, length)
+            optimizer.zero_grad()
+            loss.backward()
+            # torch.nn.utils.clip_grad_norm_(model.parameters(), 20)
+            optimizer.step()
+        lr_scheduler.step()
+
+
 def train(config, train_loader, converter, model, criterion, device, epoch, rank, logger, writer_dict=None, output_dict=None):
 
     batch_time = function.AverageMeter()
@@ -249,6 +278,14 @@ def main():
                 pin_memory=config.PIN_MEMORY,
         )
         train_loader.append(train_loader_single)
+    train_loader_share = DataLoader(
+            dataset=train_dataset_split[-1],
+            batch_size=config.TRAIN.BATCH_SIZE_PER_GPU,
+            shuffle=config.TRAIN.SHUFFLE,
+            num_workers=config.WORKERS,
+            pin_memory=config.PIN_MEMORY,
+    )
+    train_loader.append(train_loader_share)
 
     val_dataset = get_dataset(config)(config, is_train=False)
     val_loader = DataLoader(
@@ -259,23 +296,24 @@ def main():
         pin_memory=config.PIN_MEMORY,
     )
 
-    best_acc = 0.5
+    best_acc = 0.01
     converter = utils.strLabelConverter(config.DATASET.ALPHABETS)
     num_active_users = int(np.ceil(config.FED.FRAC * config.FED.NUM_USERS))
     global_update = OrderedDict()
+
+    if config.FED.NORM == 'BatchNorm':
+        pretrain(config, train_loader[-1], converter, global_model, criterion, device, logger)
 
     for epoch in range(last_epoch, config.TRAIN.END_EPOCH):  
         user_idx = torch.arange(config.FED.NUM_USERS)[torch.randperm(config.FED.NUM_USERS)[:num_active_users]].tolist()
         pulled_model_dict = copy.deepcopy(global_model.state_dict())
         
         for k, v in global_model.state_dict().items():
-            global_update[k] = torch.zeros_like(v)
-            '''
             if 'weight' in k or 'bias' in k:
                 global_update[k] = torch.zeros_like(v)
             else:
                 global_update[k] = v
-            '''
+            
         for rank in range(num_active_users):
             local_model.load_state_dict(copy.deepcopy(pulled_model_dict))
             local_model.train()
@@ -283,10 +321,7 @@ def main():
             for k, v in local_model.state_dict().items():
                 if 'weight' in k or 'bias' in k:
                     global_update[k] += v / num_active_users  
-                elif 'running_mean' in k or 'running_var' in k:
-                    global_update[k] += v / num_active_users
-                else:
-                    global_update[k] += v
+                
         global_model.load_state_dict(global_update)
         global_model.eval()
         acc = function.validate(config, val_loader, val_dataset, converter, global_model, criterion, device, epoch, logger, writer_dict, output_dict)
