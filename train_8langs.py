@@ -1,41 +1,48 @@
+# -*- coding: utf-8 -*-
 import argparse
 from easydict import EasyDict as edict
 import yaml
 import os, sys
+import copy
+import time
+import numpy as np
+from collections import OrderedDict
 import torch
+import torch.distributed as dist
+from torch.multiprocessing import Process
 import torch.backends.cudnn as cudnn
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, random_split, ConcatDataset
 
-import models.hw_mobile_net as hw_rec
-import models.crnn as crnn
-import utils.utils as utils
-from dataset import get_dataset
-from core import hw_function as function
-import config.alphabets_new as alphabets_raw #  alphabet_8langs
-from utils.utils import model_info
 import keys as alphabet
+import lib.model.hw_mobile_net as hw_rec
+import lib.model.crnn as crnn
+import lib.config.utils.utils as utils
+from lib.dataset import get_dataset
+from lib.core import hw_function as function
+import lib.config.alphabets_new as alphabets_raw #  alphabet_8langs
+from lib.config.utils.utils import model_info
 
 from tensorboardX import SummaryWriter
 import pdb
 import Logger
 
+
 def parse_arg():
     parser = argparse.ArgumentParser(description="train crnn")
-
-    parser.add_argument('--cfg', help='experiment configuration filename', required=True, type=str)
-
+    parser.add_argument('--cfg', help='experiment configuration filename', default='lib/config/hw_512_config.yaml', type=str)
     args = parser.parse_args()
 
     with open(args.cfg, 'r') as f:
-        # config = yaml.load(f, Loader=yaml.FullLoader)
-        config = yaml.load(f)
+        config = yaml.load(f, Loader=yaml.FullLoader)
+        # config = yaml.load(f)
         config = edict(config)
     # 给alphabet 赋值 用最新的 八种语言的 dict
-    config.DATASET.ALPHABETS = alphabets_raw.alphabet_cn #alphabets_jpkr.alphabet_cn
+    config.DATASET.ALPHABETS = alphabets_raw.alphabet_cn
     config.MODEL.NUM_CLASSES = len(config.DATASET.ALPHABETS)
     print(config.MODEL.NUM_CLASSES)
 
     return config
+
 
 def backward_hook(self, grad_input, grad_output):
     for g in grad_input:
@@ -66,10 +73,7 @@ def main():
     model = hw_rec.get_model(config)
     
     # get device
-    if torch.cuda.is_available():
-        device = torch.device("cuda:{}".format(config.GPUID))
-    else:
-        device = torch.device("cpu:0")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     model = model.to(device)
 
@@ -159,7 +163,7 @@ def main():
         pin_memory=config.PIN_MEMORY,
     )
 
-    best_acc = 0.5
+    best_acc = 0.01
     converter = utils.strLabelConverter(config.DATASET.ALPHABETS)
     for epoch in range(last_epoch, config.TRAIN.END_EPOCH):
 
@@ -187,5 +191,4 @@ def main():
     writer_dict['writer'].close()
 
 if __name__ == '__main__':
-
     main()

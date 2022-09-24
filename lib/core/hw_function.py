@@ -34,23 +34,23 @@ def train(config, train_loader, dataset, converter, model, criterion, optimizer,
     model.train()
 
     end = time.time()
-    for i, (inp, idx) in enumerate(train_loader):
+    for i, (inp, labels, idx) in enumerate(train_loader):
         # measure data time
         data_time.update(time.time() - end)
 
-        labels = utils.get_batch_label(dataset, idx)
+        # labels = utils.get_batch_label(dataset, idx)
         inp = inp.to(device)
         
-        print('cat inp shape ', inp.shape)
+        # print('cat inp shape ', inp.shape)
        
-        print('inp shape {0} and its idx {1}'.format(inp[0].shape, idx))
+        # print('inp shape {0} and its idx {1}'.format(inp[0].shape, idx))
         # inference
         preds = model(inp).cpu()
 
         # compute loss
         batch_size = inp.size(0)
         text, length = converter.encode(labels)                    # length = 一个batch中的总字符长度, text = 一个batch中的字符所对应的下标
-        print('loss length', length)
+        # print('loss length', length)
         preds_size = torch.IntTensor([preds.size(0)] * batch_size) # timestep * batchsize
         loss = criterion(preds, text, preds_size, length)
         
