@@ -316,7 +316,7 @@ def main():
         pulled_model_dict = copy.deepcopy(global_model.state_dict())
         
         for k, v in global_model.state_dict().items():
-            if 'weight' in k or 'bias' in k:
+            if 'weight' in k or 'bias' in k or config.MODEL.NORM == 'LayerNorm':
                 global_update[k] = torch.zeros_like(v)
             else:
                 global_update[k] = v

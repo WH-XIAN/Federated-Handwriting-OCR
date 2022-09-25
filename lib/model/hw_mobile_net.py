@@ -8,7 +8,7 @@ import torch.nn.functional as F
 
 import sys, os
 
-import lib.config.utils.alphabets_new as alphabets_raw #
+import lib.config.alphabets_new as alphabets_raw #
 from collections import OrderedDict
 import numpy as np
 from torch.autograd import Variable

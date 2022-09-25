@@ -1,7 +1,7 @@
 from ._360cc import _360CC
 from ._own import _OWN
 from ._cn import _Cn
-from ._icdar import _icdar
+# from ._icdar import _icdar
 from ._latin import _Latin
 # from ._xiaotiancai import _Xiaotiancai
 def get_dataset(config):
