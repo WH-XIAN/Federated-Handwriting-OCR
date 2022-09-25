@@ -28,7 +28,7 @@ TRAIN:
   BATCH_SIZE_PER_GPU: 100
   SHUFFLE: True
   BEGIN_EPOCH: 0
-  END_EPOCH: 8
+  END_EPOCH: 100
   RESUME:
     IS_RESUME: False
     FILE: '/mnt/Data02/junxi/CRNN_Chinese_Characters_Rec/output/Hw_Ch&En/hw_512_full_data/2022-08-02-00-23/checkpoints/checkpoint_36_acc_0.7442.pth'
@@ -60,11 +60,11 @@ MODEL:
     W: 512 # resized width: 160
   NUM_CLASSES: 0
   NUM_HIDDEN: 256
+  NORM: 'BatchNorm'
 
 FED:
   NUM_USERS: 10
   FRAC: 1
-  LOCAL_EPOCH: 2
+  LOCAL_EPOCH: 1
   SHARE_RATE: 0.1
   STARTUP_EPOCH: 5
-  NORM: 'BatchNorm'

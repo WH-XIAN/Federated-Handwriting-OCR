@@ -301,8 +301,15 @@ def main():
     num_active_users = int(np.ceil(config.FED.FRAC * config.FED.NUM_USERS))
     global_update = OrderedDict()
 
-    if config.FED.NORM == 'BatchNorm':
+    user_bn_dict = []
+    if config.MODEL.NORM == 'BatchNorm':
         pretrain(config, train_loader[-1], converter, global_model, criterion, device, logger)
+        for i in range(config.FED.NUM_USERS):
+            local_dict = OrderedDict()
+            for k, v in global_model.state_dict().items():
+                if 'running_mean' in k or 'running_var' in k:
+                    local_dict[k] = v
+            user_bn_dict.append(local_dict)
 
     for epoch in range(last_epoch, config.TRAIN.END_EPOCH):  
         user_idx = torch.arange(config.FED.NUM_USERS)[torch.randperm(config.FED.NUM_USERS)[:num_active_users]].tolist()
@@ -315,12 +322,18 @@ def main():
                 global_update[k] = v
             
         for rank in range(num_active_users):
-            local_model.load_state_dict(copy.deepcopy(pulled_model_dict))
+            local_loading_dict = copy.deepcopy(pulled_model_dict)
+            if config.MODEL.NORM == 'BatchNorm':
+                for k, v in user_bn_dict[user_idx[rank]].items():
+                    local_loading_dict[k] = v
+            local_model.load_state_dict(local_loading_dict)
             local_model.train()
             train(config, train_loader[user_idx[rank]], converter, local_model, criterion, device, epoch, rank, logger, writer_dict, output_dict) 
             for k, v in local_model.state_dict().items():
-                if 'weight' in k or 'bias' in k:
-                    global_update[k] += v / num_active_users  
+                if 'weight' in k or 'bias' in k or config.MODEL.NORM == 'LayerNorm':
+                    global_update[k] += v / num_active_users
+                elif 'running_mean' in k or 'running_var' in k:
+                    user_bn_dict[user_idx[rank]][k] = v
                 
         global_model.load_state_dict(global_update)
         global_model.eval()
