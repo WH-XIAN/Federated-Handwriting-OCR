@@ -25,6 +25,7 @@ def strLabelConverter(res, alphabet):
         print('raw', raw)
     return ''.join(raw)
 
+
 def resizeNormalize(img, imgH=32):
     # scale = img.size[1]*1.0 / imgH
     # w     = img.size[0] / scale
@@ -34,6 +35,7 @@ def resizeNormalize(img, imgH=32):
     img = (np.array(img)/255.0-0.588)/0.193
     return img
 
+
 class ConvBNReLU(nn.Sequential):
     def __init__(self, in_channel, out_channel, kernel_size=3, stride=1, groups=1):
         padding = (kernel_size - 1) // 2
@@ -42,6 +44,23 @@ class ConvBNReLU(nn.Sequential):
             nn.BatchNorm2d(out_channel),
             nn.ReLU6(inplace=False)
         )
+
+
+class ConvLNReLU(nn.Module):
+    def __init__(self, in_channel, out_channel, kernel_size=3, stride=1, groups=1):
+        super(ConvLNReLU, self).__init__()
+        padding = (kernel_size - 1) // 2
+        self.conv = nn.Conv2d(in_channel, out_channel, kernel_size, stride, padding, groups=groups, bias=False)
+        self.ln = nn.LayerNorm(out_channel)
+        self.relu = nn.ReLU6(inplace=False)
+    
+    def forward(self, x):
+        out = self.conv(x)
+        out = out.permute(0, 2, 3, 1)
+        out = self.ln(out)
+        out = out.permute(0, 3, 1, 2)
+        out = self.relu(out)
+        return out
 
 
 class FusedInvertedResidual(nn.Module):
@@ -119,14 +138,18 @@ class PositionalEncoding(nn.Module):
 
 
 class CamNet(nn.Module):
-    def __init__(self, num_classes=1000, gpu_idx=0, img_w=320 ,alpha=1.0, round_nearest=8):
+    def __init__(self, num_classes=1000, norm='BatchNorm', gpu_idx=0, img_w=320 ,alpha=1.0, round_nearest=8):
         super(CamNet, self).__init__()
 
         # combine feature layers
         # self.features = resnet.get_resnet() #  plan1: nn.Sequential(*features)
         # self.one_by_one = ConvBNReLU(512, 256, kernel_size=1)
-        self.features = mobilenetv3.get_large_net()
-        self.one_by_one = ConvBNReLU(960, 256, kernel_size=1)
+        self.norm = norm
+        self.features = mobilenetv3.get_large_net(norm)
+        if norm == 'BatchNorm':
+            self.one_by_one = ConvBNReLU(960, 256, kernel_size=1)
+        else:
+            self.one_by_one = ConvLNReLU(960, 256, kernel_size=1)
         # self.features = mobilenetv3.get_revised_large_net()
         
         # self.one_by_one = ConvBNReLU(256, 256, kernel_size=1)
@@ -149,7 +172,6 @@ class CamNet(nn.Module):
 
         x = self.features(x) # convnext
         # print('features ===>', x.shape)
-        
         x = self.one_by_one(x)
         # print('x before pooling shape ===>', x.shape)
 
@@ -289,7 +311,7 @@ def weights_init(m):
 
 
 def get_model(config):
-    model = CamNet(config.MODEL.NUM_CLASSES, config.GPUID, config.MODEL.IMAGE_SIZE.W)
+    model = CamNet(config.MODEL.NUM_CLASSES, config.MODEL.NORM, config.GPUID, config.MODEL.IMAGE_SIZE.W)
     # model.apply(weights_init)
 
     return model
