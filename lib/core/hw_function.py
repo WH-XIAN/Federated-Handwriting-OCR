@@ -148,7 +148,7 @@ def validate(config, val_loader, dataset, converter, model, criterion, device, e
 
     print("[#correct:{} / #total:{}]".format(n_correct, num_test_sample))
     accuracy = n_correct / float(num_test_sample)
-    logger.info('Test loss: {:.4f}, accuray: {:.4f}'.format(losses.avg, accuracy))
+    logger.info('Test loss: {:.4f}, accuracy: {:.4f}'.format(losses.avg, accuracy))
 
     if writer_dict:
         writer = writer_dict['writer']
