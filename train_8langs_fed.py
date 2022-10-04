@@ -94,11 +94,17 @@ def pretrain(config, train_loader, converter, model, criterion, device, logger):
         lr_scheduler.step()
 
 
-def train(config, train_loader, converter, model, criterion, device, epoch, rank, logger, writer_dict=None, output_dict=None):
+def train(config, train_loader, converter, model, loading_dict, user_drift, criterion, device, epoch, rank, logger, writer_dict=None, output_dict=None):
 
     batch_time = function.AverageMeter()
     data_time = function.AverageMeter()
     losses = function.AverageMeter()
+
+    model.load_state_dict(copy.deepcopy(loading_dict))
+    model.train()
+
+    for k in loading_dict:
+        loading_dict[k].requires_grad = False
 
     optimizer = utils.get_optimizer(config, model)
     if isinstance(config.TRAIN.LR_STEP, list):
@@ -133,6 +139,12 @@ def train(config, train_loader, converter, model, criterion, device, epoch, rank
             # print('loss length', length)
             preds_size = torch.IntTensor([preds.size(0)] * batch_size) # timestep * batchsize
             loss = criterion(preds, text, preds_size, length)
+
+            if config.FED.DC:
+                reg = torch.tensor(0.).to(device)
+                for k, v in model.state_dict().items():
+                    reg = reg + torch.sum((v - loading_dict[k] + user_drift[k]) * (v - loading_dict[k] + user_drift[k]))
+                loss = loss + 0.5 * config.FED.DC_ALPHA * reg
             
             # loss = topk(loss, k)
 
@@ -164,6 +176,10 @@ def train(config, train_loader, converter, model, criterion, device, epoch, rank
             end = time.time()
             # if i >= 10: break
         lr_scheduler.step()
+
+    if config.FED.DC:
+        for k, v in model.state_dict().items():
+            user_drift[k] = user_drift[k] + v - loading_dict[k]
 
             
 def main():
@@ -311,6 +327,16 @@ def main():
                     local_dict[k] = v
             user_bn_dict.append(local_dict)
 
+    user_drift_dict = []
+    DC_alpha = config.FED.DC_ALPHA
+    if config.FED.DC:
+        for i in range(config.FED.NUM_USERS):
+            local_dict = OrderedDict()
+            for k, v in global_model.state_dict().items():
+                local_dict[k] = torch.zeros_like(v).to(device)
+                local_dict[k].requires_grad = False
+            user_drift_dict.append(local_dict)
+
     for epoch in range(last_epoch, config.TRAIN.END_EPOCH):  
         user_idx = torch.arange(config.FED.NUM_USERS)[torch.randperm(config.FED.NUM_USERS)[:num_active_users]].tolist()
         pulled_model_dict = copy.deepcopy(global_model.state_dict())
@@ -326,15 +352,20 @@ def main():
             if config.MODEL.NORM == 'BatchNorm':
                 for k, v in user_bn_dict[user_idx[rank]].items():
                     local_loading_dict[k] = v
-            local_model.load_state_dict(local_loading_dict)
-            local_model.train()
-            train(config, train_loader[user_idx[rank]], converter, local_model, criterion, device, epoch, rank, logger, writer_dict, output_dict) 
+
+            user_drift = None
+            if config.FED.DC:
+                user_drift = user_drift_dict[user_idx[rank]]
+            
+            train(config, train_loader[user_idx[rank]], converter, local_model, local_loading_dict, user_drift, criterion, device, epoch, rank, logger, writer_dict, output_dict) 
             for k, v in local_model.state_dict().items():
                 if 'weight' in k or 'bias' in k or config.MODEL.NORM == 'LayerNorm':
                     global_update[k] += v / num_active_users
+                    if config.FED.DC:
+                        global_update[k] += user_drift[k] / num_active_users
                 elif 'running_mean' in k or 'running_var' in k:
                     user_bn_dict[user_idx[rank]][k] = v
-                
+            
         global_model.load_state_dict(global_update)
         global_model.eval()
         acc = function.validate(config, val_loader, val_dataset, converter, global_model, criterion, device, epoch, logger, writer_dict, output_dict)
