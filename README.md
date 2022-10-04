@@ -17,10 +17,13 @@ training data: 662696, testing data: 85303, dictionary: 6636
 
 ## Parameters
 Parameters are defined in *lib/config/hw_512_config.yaml*  
-For federated learning:
 <pre>
-* FED.NUM_USERS      the total number of users
-* FED.FRAC           the fraction of active users in each communication round
-* FED.LOCAL_EPOCH    the number of local training epochs in each communication round
-* FED.SHARE_RATE     the fraction of shared data in the whole training data
+* MODEL.NORM          *string*, to use 'BatchNorm' or 'LayerNorm'
+* FED.NUM_USERS       *int*, the total number of users
+* FED.FRAC            *float*, the fraction of active users in each communication round
+* FED.LOCAL_EPOCH     *int*, the number of local training epochs in each communication round
+* FED.SHARE_RATE      *float*, the fraction of shared data in the whole training data
+* FED.STARTUP_EPOCH   *int*, the number of epochs for pretraining on shared data
+* FED.DC              *bool*, whether to use drift correction
+* FED.DC_ALPHA        *float*, the coefficient of drift correction term
 </pre>
