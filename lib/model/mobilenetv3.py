@@ -48,15 +48,19 @@ class SeModule(nn.Module):
             out = self.bn1(out)
         else:
             out = out.permute(0, 2, 3, 1)
+            out.contiguous()
             out = self.bn1(out)
             out = out.permute(0, 3, 1, 2)
+            out.contiguous()
         out = self.se2(self.relu(out))
         if self.norm == 'BatchNorm':
             out = self.bn2(out)
         else:
             out = out.permute(0, 2, 3, 1)
+            out.contiguous()
             out = self.bn2(out)
             out = out.permute(0, 3, 1, 2)
+            out.contiguous()
         out = self.hs(out)
         return x * out
 
@@ -102,24 +106,30 @@ class Block(nn.Module):
             out = self.bn1(out)
         else:
             out = out.permute(0, 2, 3, 1)
+            out.contiguous()
             out = self.bn1(out)
             out = out.permute(0, 3, 1, 2)
+            out.contiguous()
         out = self.nolinear1(out)
         out = self.conv2(out)
         if self.norm == 'BatchNorm':
             out = self.bn2(out)
         else:
             out = out.permute(0, 2, 3, 1)
+            out.contiguous()
             out = self.bn2(out)
             out = out.permute(0, 3, 1, 2)
+            out.contiguous()
         out = self.nolinear2(out)
         out = self.conv3(out)
         if self.norm == 'BatchNorm':
             out = self.bn3(out)
         else:
             out = out.permute(0, 2, 3, 1)
+            out.contiguous()
             out = self.bn3(out)
             out = out.permute(0, 3, 1, 2)
+            out.contiguous()
         if self.se != None:
             out = self.se(out)
         # out = out + self.shortcut(x) if self.stride==1 else out
@@ -130,8 +140,10 @@ class Block(nn.Module):
                     y = self.bn4(y)
                 else:
                     y = y.permute(0, 2, 3, 1)
+                    out.contiguous()
                     y = self.bn4(y)
                     y = y.permute(0, 3, 1, 2)
+                    out.contiguous()
             out = out + y
         return out
 
@@ -197,8 +209,10 @@ class MobileNetV3_Large(nn.Module):
             out = self.bn1(out)
         else:
             out = out.permute(0, 2, 3, 1)
+            out.contiguous()
             out = self.bn1(out)
             out = out.permute(0, 3, 1, 2)
+            out.contiguous()
         out = self.hs1(out)
         out = self.bneck(out)
         out = self.conv2(out)
@@ -206,8 +220,10 @@ class MobileNetV3_Large(nn.Module):
             out = self.bn2(out)
         else:
             out = out.permute(0, 2, 3, 1)
+            out.contiguous()
             out = self.bn2(out)
             out = out.permute(0, 3, 1, 2)
+            out.contiguous()
         out = self.hs2(out)
         # out = F.avg_pool2d(out, 7)
         # out = out.view(out.size(0), -1)

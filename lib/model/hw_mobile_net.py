@@ -57,8 +57,10 @@ class ConvLNReLU(nn.Module):
     def forward(self, x):
         out = self.conv(x)
         out = out.permute(0, 2, 3, 1)
+        out.contiguous()
         out = self.ln(out)
         out = out.permute(0, 3, 1, 2)
+        out.contiguous()
         out = self.relu(out)
         return out
 
