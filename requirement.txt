@@ -1,6 +1,7 @@
 torch
 pyyaml
 easydict
+editdistance
 thop
 tensorboardX
 opencv-python

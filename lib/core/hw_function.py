@@ -3,6 +3,7 @@ import time
 import lib.config.utils.utils as utils
 import torch
 import chardet
+import editdistance as ed
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -91,6 +92,7 @@ def validate(config, val_loader, dataset, converter, model, criterion, device, e
     model.eval()
 
     n_correct = 0
+    ed_dist = 0
     with torch.no_grad():
         for i, (inp, labels, idx) in enumerate(val_loader):
 
@@ -128,6 +130,7 @@ def validate(config, val_loader, dataset, converter, model, criterion, device, e
                     print('maybe sth else ====>')
                     print('pred : ==> ', len(pred) , ' === ', 'target ===> ', len(target))
                 '''
+                ed_dist += ed.eval(pred, target.strip())
             if (i + 1) % config.PRINT_FREQ == 0:
                 print('Epoch: [{0}][{1}/{2}]'.format(epoch, i, len(val_loader)))
 
@@ -148,7 +151,8 @@ def validate(config, val_loader, dataset, converter, model, criterion, device, e
 
     print("[#correct:{} / #total:{}]".format(n_correct, num_test_sample))
     accuracy = n_correct / float(num_test_sample)
-    logger.info('Test loss: {:.4f}, accuracy: {:.4f}'.format(losses.avg, accuracy))
+    avg_ed_dist = ed_dist / float(num_test_sample)
+    logger.info('Test loss: {:.4f}, accuracy: {:.4f}, editdistance: {:.4f}'.format(losses.avg, accuracy, avg_ed_dist))
 
     if writer_dict:
         writer = writer_dict['writer']
