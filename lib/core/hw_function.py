@@ -93,6 +93,7 @@ def validate(config, val_loader, dataset, converter, model, criterion, device, e
 
     n_correct = 0
     ed_dist = 0
+    len_test_sample = 0
     with torch.no_grad():
         for i, (inp, labels, idx) in enumerate(val_loader):
 
