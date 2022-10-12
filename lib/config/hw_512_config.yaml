@@ -3,7 +3,7 @@ WORKERS: 40
 PRINT_FREQ: 10
 SAVE_FREQ: 10
 PIN_MEMORY: False
-OUTPUT_DIR: 'output_dc'
+OUTPUT_DIR: 'output_bn_en'
 
 CUDNN:
   BENCHMARK: True
@@ -14,14 +14,15 @@ DATASET:
   DATASET: Hw_Ch&En # Ch&En 
   ROOT: ""
   JSON_FILE: {
-    'train': '/home/wex37/FedOCR/data/hw_train.json',
-    'val': '/home/wex37/FedOCR/data/hw_test.json'
+    'train': '/home/wex37/FedOCR/data/hw_train_en.json',
+    'val': '/home/wex37/FedOCR/data/hw_test_en.json'
   } 
   
   SCALE_FACTOR: 0.25
   ROT_FACTOR: 30
   STD: 0.193
   MEAN: 0.588
+  LANGUAGE: 'English'
   ALPHABETS: ''
 
 TRAIN:
@@ -60,7 +61,7 @@ MODEL:
     W: 512 # resized width: 160
   NUM_CLASSES: 0
   NUM_HIDDEN: 256
-  NORM: 'LayerNorm'
+  NORM: 'BatchNorm'
 
 FED:
   NUM_USERS: 10

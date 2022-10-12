@@ -37,7 +37,10 @@ def parse_arg():
         # config = yaml.load(f)
         config = edict(config)
     # 给alphabet 赋值 用最新的 八种语言的 dict
-    config.DATASET.ALPHABETS = alphabets_raw.alphabet_cn
+    if config.DATASET.LANGUAGE == 'English':
+        config.DATASET.ALPHABETS = alphabets_raw.alphabet_en
+    else:
+        config.DATASET.ALPHABETS = alphabets_raw.alphabet_cn
     config.MODEL.NUM_CLASSES = len(config.DATASET.ALPHABETS)
     print(config.MODEL.NUM_CLASSES)
 
