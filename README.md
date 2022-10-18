@@ -28,7 +28,15 @@ Parameters are defined in *lib/config/hw_512_config.yaml*
 * FED.DC                bool, whether to use drift control
 * FED.DC_ALPHA          float, the coefficient of drift control term
 </pre>
-To train RNN on Chinese + English dataset, set *DATASET.LANGUAGE='Chinese'*, *MODEL.TYPE='RNN'*, *DATASET.JSON_FILE['train']=* path of *hw_train.json* and *DATASET.JSON_FILE['val']=* path of *hw_test.json*  
-To train Self Attention on English dataset, set *DATASET.LANGUAGE='English'*, *MODEL.TYPE='Attention'*, *DATASET.JSON_FILE['train']=* path of *hw_train_en.json* and *DATASET.JSON_FILE['val']=* path of *hw_test_en.json*   
+* To train RNN on Chinese + English dataset, set  
+*DATASET.LANGUAGE='Chinese'*  
+*MODEL.TYPE='RNN'*    
+*DATASET.JSON_FILE['train']=* the path of *hw_train.json*  
+*DATASET.JSON_FILE['val']=* the path of *hw_test.json*  
+* To train Self Attention on English dataset, set  
+*DATASET.LANGUAGE='English'*   
+*MODEL.TYPE='Attention'*   
+*DATASET.JSON_FILE['train']=* the path of *hw_train_en.json*   
+*DATASET.JSON_FILE['val']=* the path of *hw_test_en.json*    
 **Remember to change** the path of dictionary in *lib/config/alphabets_new.py*  
 The number of communication rounds is *TRAIN.END_EPOCH*. Learning rate can be tuned by changing *TRAIN.LR*.
