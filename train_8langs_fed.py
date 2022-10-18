@@ -315,7 +315,7 @@ def main():
         pin_memory=config.PIN_MEMORY,
     )
 
-    best_acc = 0.01
+    best_acc = 0.4
     converter = utils.strLabelConverter(config.DATASET.ALPHABETS)
     num_active_users = int(np.ceil(config.FED.FRAC * config.FED.NUM_USERS))
     global_update = OrderedDict()
