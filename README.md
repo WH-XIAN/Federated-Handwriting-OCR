@@ -17,7 +17,7 @@ training data: 662696, testing data: 85303, dictionary: 6636
 
 ## Parameters
 Parameters are defined in *lib/config/hw_512_config.yaml*  
-</pre>
+<pre>
 * DATASET.LANGUAGE      string, to train on 'Chinese' or 'English' dataset
 * MODEL.TYPE            string, to use 'Attention' or 'RNN' as the learning model
 * MODEL.NORM            string, to use 'BatchNorm' or 'LayerNorm' as normalization
