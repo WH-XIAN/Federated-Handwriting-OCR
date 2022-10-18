@@ -3,7 +3,7 @@ WORKERS: 40
 PRINT_FREQ: 10
 SAVE_FREQ: 10
 PIN_MEMORY: False
-OUTPUT_DIR: 'output_bn_en'
+OUTPUT_DIR: 'output_rnn'
 
 CUDNN:
   BENCHMARK: True
@@ -14,15 +14,15 @@ DATASET:
   DATASET: Hw_Ch&En # Ch&En 
   ROOT: ""
   JSON_FILE: {
-    'train': '/home/wex37/FedOCR/data/hw_train_en.json',
-    'val': '/home/wex37/FedOCR/data/hw_test_en.json'
+    'train': '/home/wex37/FedOCR/data/hw_train.json',
+    'val': '/home/wex37/FedOCR/data/hw_test.json'
   } 
   
   SCALE_FACTOR: 0.25
   ROT_FACTOR: 30
   STD: 0.193
   MEAN: 0.588
-  LANGUAGE: 'English'
+  LANGUAGE: 'Chinese'
   ALPHABETS: ''
 
 TRAIN:
@@ -55,19 +55,20 @@ TEST:
 
 MODEL:
   NAME: 'hw_512_full_data'
+  TYPE: 'RNN'
   IMAGE_SIZE:
     OW: 320 # origial width: 280
     H: 32
     W: 512 # resized width: 160
   NUM_CLASSES: 0
   NUM_HIDDEN: 256
-  NORM: 'BatchNorm'
+  NORM: 'LayerNorm'
 
 FED:
   NUM_USERS: 10
   FRAC: 1
   LOCAL_EPOCH: 1
-  SHARE_RATE: 0.1
+  SHARE_RATE: 0.2
   STARTUP_EPOCH: 5
   DC: True
   DC_ALPHA: 0.01

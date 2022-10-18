@@ -243,6 +243,93 @@ class CamNet(nn.Module):
         return raw, sent_prob
 
 
+class BidirectionalLSTM(nn.Module):
+    # Inputs hidden units Out
+    def __init__(self, nIn, nHidden, nOut):
+        super(BidirectionalLSTM, self).__init__()
+
+        self.rnn = nn.LSTM(nIn, nHidden, bidirectional=True)
+        self.embedding = nn.Linear(nHidden * 2, nOut)
+
+    def forward(self, input):
+        recurrent, _ = self.rnn(input)
+        T, b, h = recurrent.size()
+        t_rec = recurrent.view(T * b, h)
+
+        output = self.embedding(t_rec)  # [T * b, nOut]
+        output = output.view(T, b, -1)
+
+        return output
+
+
+class CRNN(nn.Module):
+    def __init__(self, num_classes=1000, norm='BatchNorm', gpu_idx=0, img_w=320 , nh=256):
+        super(CRNN, self).__init__()
+
+        self.norm = norm
+        self.features = mobilenetv3.get_large_net(norm)
+        if norm == 'BatchNorm':
+            self.one_by_one = ConvBNReLU(960, 256, kernel_size=1)
+        else:
+            self.one_by_one = ConvLNReLU(960, 256, kernel_size=1)
+        
+        assert img_w % 32 == 0
+        self.rnn = nn.Sequential(
+            BidirectionalLSTM(256, nh, nh),
+            BidirectionalLSTM(nh, nh, num_classes))
+    
+    def forward(self, x):
+        out = self.features(x)
+        out = self.one_by_one(out)
+        out = out[:, : , 0, :] # 32 256 40
+        out = out.permute(2, 0, 1) # 40 b 256
+        out = F.log_softmax(self.rnn(out), dim=2)
+        return out
+
+    def load_weights(self, path, use_gpu=True):
+        
+        trainWeights = torch.load(path,map_location=lambda storage, loc: storage)
+        ### add here
+        if 'state_dict' in trainWeights.keys():
+            trainWeights = trainWeights['state_dict']
+        else:
+            trainWeights = trainWeights
+            
+        modelWeights = OrderedDict()
+        for k, v in trainWeights.items():
+            name = k.replace('module.','') # remove `module.`
+            modelWeights[name] = v      
+        self.load_state_dict(modelWeights)
+        if use_gpu:
+            self.cuda()
+        self.eval()
+
+    def predict(self,image):
+        image = resizeNormalize(image,32)
+        image = image.astype(np.float32)
+        image = torch.from_numpy(image)
+        if torch.cuda.is_available():
+            image   = image.cuda()
+        else:
+            image   = image.cpu()
+        image       = image.view(1,1, *image.size())
+        image       = Variable(image)
+        preds       = self(image)
+        print('preds shape is ', preds.shape)
+        # get probs
+        print(softmax(preds, dim=-1).shape)
+        values, prob = softmax(preds, dim=-1).max(2)
+        preds_idx = (prob > 0).nonzero()
+        sent_prob = values[preds_idx[:,0], preds_idx[:, 1]].detach()
+        # get preds
+        _, preds    = preds.max(2)
+        preds       = preds.transpose(1, 0).contiguous().view(-1)
+        raw         = strLabelConverter(preds, alphabets_raw.alphabet_cn)
+        # print(raw, sent_prob)
+
+        return raw, sent_prob
+
+
 class SelfAttention(nn.Module):
     def __init__(self, dim, heads = 4, dim_head = 64, dropout = 0.1):
         super().__init__()
@@ -313,8 +400,12 @@ def weights_init(m):
 
 
 def get_model(config):
-    model = CamNet(config.MODEL.NUM_CLASSES, config.MODEL.NORM, config.GPUID, config.MODEL.IMAGE_SIZE.W)
-    # model.apply(weights_init)
+    if config.MODEL.TYPE == 'RNN':
+        model = CRNN(config.MODEL.NUM_CLASSES, config.MODEL.NORM, config.GPUID, config.MODEL.IMAGE_SIZE.W, config.MODEL.NUM_HIDDEN)
+        # model.apply(weights_init)
+    else:
+        model = CamNet(config.MODEL.NUM_CLASSES, config.MODEL.NORM, config.GPUID, config.MODEL.IMAGE_SIZE.W)
+        # model.apply(weights_init)
 
     return model
 
