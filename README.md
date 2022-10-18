@@ -38,5 +38,6 @@ Parameters are defined in *lib/config/hw_512_config.yaml*
 *MODEL.TYPE='Attention'*   
 *DATASET.JSON_FILE['train']=* the path of *hw_train_en.json*   
 *DATASET.JSON_FILE['val']=* the path of *hw_test_en.json*    
+
 **Remember to change** the path of dictionary in *lib/config/alphabets_new.py*  
 The number of communication rounds is *TRAIN.END_EPOCH*. Learning rate can be tuned by changing *TRAIN.LR*.
