@@ -3,7 +3,7 @@ WORKERS: 40
 PRINT_FREQ: 10
 SAVE_FREQ: 10
 PIN_MEMORY: False
-OUTPUT_DIR: 'output_rnn'
+OUTPUT_DIR: 'output_dc'
 
 CUDNN:
   BENCHMARK: True
@@ -14,27 +14,27 @@ DATASET:
   DATASET: Hw_Ch&En # Ch&En 
   ROOT: ""
   JSON_FILE: {
-    'train': '/home/wex37/FedOCR/data/hw_train.json',
-    'val': '/home/wex37/FedOCR/data/hw_test.json'
+    'train': '/home/wex37/FedOCR/data/hw_train_en.json',
+    'val': '/home/wex37/FedOCR/data/hw_test_en.json'
   } 
   
   SCALE_FACTOR: 0.25
   ROT_FACTOR: 30
   STD: 0.193
   MEAN: 0.588
-  LANGUAGE: 'Chinese'
+  LANGUAGE: 'English'
   ALPHABETS: ''
 
 TRAIN:
   BATCH_SIZE_PER_GPU: 256
   SHUFFLE: True
   BEGIN_EPOCH: 0
-  END_EPOCH: 100
+  END_EPOCH: 150
   RESUME:
     IS_RESUME: False
-    FILE: '/mnt/Data02/junxi/CRNN_Chinese_Characters_Rec/output/Hw_Ch&En/hw_512_full_data/2022-08-02-00-23/checkpoints/checkpoint_36_acc_0.7442.pth'
+    FILE: '/home/wex37/FedOCR/code/Federated-Handwriting-OCR/output_dc_100_5/Hw_Ch&En/hw_512_full_data/2022-10-26-11-59/checkpoints/checkpoint_41_acc_0.4965.pth'
   OPTIMIZER: 'adam' # 'adam' 用于各项参数都收敛了以后可以继续优化一下 
-  LR: 0.00004 #1 : 0.0002 *** 2: 0.00008 训练后期调小 为了能够让步子小一点不会扯着蛋
+  LR: 0.00004 #1 : 0.0002 *** 2: 0.00008 训练后期调小 
   WD: 0.0
   LR_STEP: [5, 10, 15, 20, 25] # [10, 20, 30, 40, 50] , [5, 10, 15, 20, 25]
   LR_FACTOR: 0.5
@@ -55,7 +55,7 @@ TEST:
 
 MODEL:
   NAME: 'hw_512_full_data'
-  TYPE: 'RNN'
+  TYPE: 'Attention'
   IMAGE_SIZE:
     OW: 320 # origial width: 280
     H: 32
@@ -68,7 +68,7 @@ FED:
   NUM_USERS: 10
   FRAC: 1
   LOCAL_EPOCH: 1
-  SHARE_RATE: 0.2
-  STARTUP_EPOCH: 5
+  SHARE_RATE: 0.1
+  STARTUP_EPOCH: 0
   DC: True
   DC_ALPHA: 0.01
